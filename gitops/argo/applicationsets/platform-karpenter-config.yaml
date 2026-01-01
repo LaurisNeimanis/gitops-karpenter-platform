@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-karpenter-config
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: karpenter
+
+  template:
+    metadata:
+      name: karpenter-config-{{env}}
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: platform
+
+      source:
+        repoURL: https://github.com/LaurisNeimanis/gitops-karpenter-platform.git
+        targetRevision: main
+        path: gitops/apps/platform/karpenter/config
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

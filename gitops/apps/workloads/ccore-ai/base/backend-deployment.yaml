@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ccore-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ccore-backend
+  template:
+    metadata:
+      labels:
+        app: ccore-backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/laurisneimanis/ccore-ai-demo-backend:latest
+          ports:
+            - containerPort: 8000

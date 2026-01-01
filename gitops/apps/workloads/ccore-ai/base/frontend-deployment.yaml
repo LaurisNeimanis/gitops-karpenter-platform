@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ccore-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ccore-frontend
+  template:
+    metadata:
+      labels:
+        app: ccore-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/laurisneimanis/ccore-ai-demo-frontend:latest
+          ports:
+            - containerPort: 8501
+          env:
+            # Streamlit
+            - name: STREAMLIT_SERVER_ADDRESS
+              value: "0.0.0.0"
+            - name: STREAMLIT_SERVER_PORT
+              value: "8501"
+            - name: STREAMLIT_SERVER_ENABLE_CORS
+              value: "false"
+
+            # Backend service (Kubernetes DNS)
+            - name: BACKEND_HOST
+              value: "ccore-backend"
+            - name: BACKEND_PORT
+              value: "8000"

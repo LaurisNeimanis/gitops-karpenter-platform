@@ -1,0 +1,98 @@
+flowchart TB
+    %% =========================
+    %% AWS INFRASTRUCTURE LAYER
+    %% =========================
+    subgraph AWS["AWS Account"]
+        VPC["VPC"]
+        SUBNETS["Private Subnets"]
+        EC2["EC2 Instances"]
+        NLB["AWS NLB<br/>(TLS via ACM)"]
+        SQS["SQS Interruption Queue"]
+        EB["EventBridge"]
+        DNS["DNS Provider<br/>(Cloudflare)"]
+    end
+
+    %% =========================
+    %% TERRAFORM (INFRA + KARPENTER PREREQS)
+    %% =========================
+    subgraph TF["Terraform"]
+        TF_EKS["EKS Cluster"]
+        TF_MNG["Managed Node Group<br/>(bootstrap / system)"]
+        TF_KARP_AWS["Karpenter AWS Prerequisites<br/>(IAM, SQS, Events)"]
+    end
+
+    %% =========================
+    %% KUBERNETES CONTROL PLANE
+    %% =========================
+    subgraph K8S["Kubernetes Control Plane"]
+        API["EKS API Server"]
+    end
+
+    %% =========================
+    %% GITOPS CONTROL PLANE
+    %% =========================
+    subgraph GITOPS["GitOps Control Plane"]
+        ARGO["Argo CD<br/>(App-of-Apps)"]
+    end
+
+    %% =========================
+    %% PLATFORM LAYER
+    %% =========================
+    subgraph PLATFORM["Platform Layer"]
+        KARP["Karpenter Controller"]
+        EC2CLASS["EC2NodeClass"]
+        NP_OND["NodePool<br/>on-demand"]
+        NP_SPOT["NodePool<br/>spot"]
+        TRAEFIK["Traefik Ingress"]
+        EXTDNS["ExternalDNS"]
+    end
+
+    %% =========================
+    %% WORKLOADS
+    %% =========================
+    subgraph WORKLOADS["Application Workloads"]
+        APP["Deployments<br/>(CPU / memory only)"]
+    end
+
+    %% =========================
+    %% RELATIONSHIPS
+    %% =========================
+
+    %% Terraform → AWS
+    TF --> VPC
+    TF --> SUBNETS
+    TF --> TF_EKS
+    TF_EKS --> TF_MNG
+    TF_MNG --> EC2
+
+    TF_KARP_AWS --> SQS
+    TF_KARP_AWS --> EB
+    EB --> SQS
+
+    %% EKS control plane
+    TF_EKS --> API
+    API --> ARGO
+
+    %% GitOps reconciliation
+    ARGO --> API
+
+    %% Platform resources via API
+    API --> KARP
+    API --> EC2CLASS
+    API --> NP_OND
+    API --> NP_SPOT
+    API --> TRAEFIK
+    API --> EXTDNS
+    API --> APP
+
+    %% Karpenter behavior
+    KARP --> EC2CLASS
+    KARP --> NP_OND
+    KARP --> NP_SPOT
+    KARP --> EC2
+    SQS --> KARP
+
+    %% Traffic flow
+    DNS --> NLB
+    NLB --> TRAEFIK
+    TRAEFIK --> APP

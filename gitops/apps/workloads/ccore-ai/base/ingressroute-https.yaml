@@ -1,0 +1,13 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ccore-ai-https
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`demo.ccore.ai`)
+      kind: Rule
+      services:
+        - name: ccore-frontend
+          port: 8501

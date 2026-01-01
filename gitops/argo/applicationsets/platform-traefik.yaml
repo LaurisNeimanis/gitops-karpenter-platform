@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-traefik
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            name: traefik
+            namespace: traefik
+            chart: traefik
+            repo: https://helm.traefik.io/traefik
+            version: "37.4.0"
+
+  template:
+    metadata:
+      name: '{{name}}-{{env}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+    spec:
+      project: platform
+
+      sources:
+        - repoURL: '{{repo}}'
+          chart: '{{chart}}'
+          targetRevision: '{{version}}'
+          helm:
+            valueFiles:
+              - $values/gitops/apps/platform/traefik/values/values.yaml
+              - $values/gitops/apps/platform/traefik/values/values-{{env}}.yaml
+
+        - repoURL: https://github.com/LaurisNeimanis/gitops-karpenter-platform.git
+          targetRevision: main
+          ref: values
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

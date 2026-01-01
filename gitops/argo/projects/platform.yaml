@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: Platform-level components (ingress, infra services)
+
+  # Allowed source repositories (Git + Helm)
+  sourceRepos:
+    - https://github.com/LaurisNeimanis/gitops-karpenter-platform.git
+    - https://helm.traefik.io/traefik
+    - https://kubernetes-sigs.github.io/external-dns/
+
+  # Single cluster, any namespace
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: '*'
+
+  # Allowed cluster-scoped resources (STRICT, REQUIRED)
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: networking.k8s.io
+      kind: IngressClass
+
+    # Karpenter CORE
+    - group: karpenter.sh
+      kind: NodePool
+    - group: karpenter.k8s.aws
+      kind: EC2NodeClass
+
+    # Webhooks
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+
+    # Leader election / coordination
+    - group: coordination.k8s.io
+      kind: Lease
+
+  # Allow all namespaced resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-external-dns
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            name: external-dns
+            namespace: external-dns
+            chart: external-dns
+            repo: https://kubernetes-sigs.github.io/external-dns/
+            version: 1.19.0
+
+  template:
+    metadata:
+      name: '{{name}}-{{env}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: platform
+
+      sources:
+        - repoURL: '{{repo}}'
+          chart: '{{chart}}'
+          targetRevision: '{{version}}'
+          helm:
+            valueFiles:
+              - $values/gitops/apps/platform/{{name}}/values/values.yaml
+              - $values/gitops/apps/platform/{{name}}/values/values-{{env}}.yaml
+
+        - repoURL: https://github.com/LaurisNeimanis/gitops-karpenter-platform.git
+          targetRevision: main
+          ref: values
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

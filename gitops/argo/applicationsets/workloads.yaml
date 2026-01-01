@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: workloads
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: whoami
+            env: dev
+            namespace: whoami
+
+          - name: ccore-ai
+            env: dev
+            namespace: ccore-ai
+
+  template:
+    metadata:
+      name: '{{name}}-{{env}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "3"
+
+    spec:
+      project: workloads
+
+      source:
+        repoURL: https://github.com/LaurisNeimanis/gitops-karpenter-platform.git
+        targetRevision: main
+        path: gitops/apps/workloads/{{name}}/overlays/{{env}}
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

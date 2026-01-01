@@ -1,0 +1,13 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: whoami-https
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`whoami.ccore.ai`)
+      kind: Rule
+      services:
+        - name: whoami
+          port: 80
