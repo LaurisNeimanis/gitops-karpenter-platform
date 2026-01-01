@@ -1,0 +1,47 @@
+# ----------------------------------
+# Terraform
+# ----------------------------------
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+*.tfplan
+crash.log
+crash.*.log
+
+# ----------------------------------
+# Kubernetes / GitOps
+# ----------------------------------
+*.kubeconfig
+kubeconfig*
+kubectl-cache/
+
+# Helm / GitOps generated artifacts
+**/charts/
+**/helm-cache/
+
+# ----------------------------------
+# Secrets (never commit)
+# ----------------------------------
+*.env
+.env
+.env.*
+secrets.yaml
+secrets*.yaml
+*.sops.yaml
+*.sops.yml
+
+# ----------------------------------
+# OS / Editor
+# ----------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ----------------------------------
+# Logs
+# ----------------------------------
+*.log

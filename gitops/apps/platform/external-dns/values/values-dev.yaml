@@ -1,0 +1,3 @@
+# Faster feedback in dev
+interval: 1m
+logLevel: debug

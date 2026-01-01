@@ -1,0 +1,5 @@
+resources:
+  - platform-external-dns.yaml
+  - platform-traefik.yaml
+  - platform-karpenter-config.yaml
+  - workloads.yaml

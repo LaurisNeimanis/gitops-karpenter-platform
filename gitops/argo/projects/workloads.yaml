@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: workloads
+  namespace: argocd
+spec:
+  description: Workload applications
+
+  sourceRepos:
+    - https://github.com/LaurisNeimanis/gitops-karpenter-platform.git
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: '*'
+
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

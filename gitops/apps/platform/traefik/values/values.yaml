@@ -1,0 +1,178 @@
+# ------------------------------------------------------------------------------
+# Traefik "golden" values.yaml (AWS EKS + NLB + ACM)
+#
+# Architecture:
+# - TLS is terminated at AWS NLB using ACM
+# - Traefik operates in plain HTTP mode (no ACME, no internal TLS)
+#
+# Guarantees:
+# - HA: 2 replicas + topology spread + PDB
+# - Deterministic scaling: HPA based on CPU
+# - Hardened runtime: non-root, read-only FS
+# - Observability: Prometheus metrics + /ping healthchecks
+# ------------------------------------------------------------------------------
+
+replicaCount: 2
+
+# ------------------------------------------------------------------------------
+# Providers
+# ------------------------------------------------------------------------------
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+
+# ------------------------------------------------------------------------------
+# Disable ACME completely (TLS is handled by AWS NLB + ACM)
+# ------------------------------------------------------------------------------
+certificatesResolvers: {}
+
+# ------------------------------------------------------------------------------
+# Resources (recommended baseline)
+# ------------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# ------------------------------------------------------------------------------
+# Autoscaling (HPA)
+# ------------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+
+# ------------------------------------------------------------------------------
+# Deployment strategy (zero-downtime rolling updates)
+# ------------------------------------------------------------------------------
+deploymentStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
+
+# ------------------------------------------------------------------------------
+# HA scheduling
+# ------------------------------------------------------------------------------
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values: ["traefik"]
+        topologyKey: kubernetes.io/hostname
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# ------------------------------------------------------------------------------
+# Security hardening
+# ------------------------------------------------------------------------------
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  readOnlyRootFilesystem: true
+
+# ------------------------------------------------------------------------------
+# Observability
+# ------------------------------------------------------------------------------
+metrics:
+  prometheus:
+    enabled: true
+    entryPoint: metrics
+
+# Ping endpoint for NLB health checks
+ping:
+  enabled: true
+
+# ------------------------------------------------------------------------------
+# Service: AWS NLB + ACM (TLS terminated at NLB)
+# ------------------------------------------------------------------------------
+service:
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:eu-central-1:277679348320:certificate/18a3f75f-1fb2-461d-9aa2-c3b60591d773"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+
+    # Healthchecks (recommended)
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "HTTP"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "traffic-port"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/ping"
+
+    # ExternalDNS-managed entrypoint hostname.
+    # Automatically updated to the current AWS NLB DNS name when the Service is recreated.
+    external-dns.alpha.kubernetes.io/hostname: ingress.ccore.ai
+
+# ------------------------------------------------------------------------------
+# Ports
+# - 443 stays enabled as transport port from NLB (plain HTTP), Traefik TLS disabled
+# - 80 optional: keep for redirect or debugging; can be locked down later
+# ------------------------------------------------------------------------------
+ports:
+  web:
+    port: 80
+    exposedPort: 80
+
+  websecure:
+    port: 443
+    exposedPort: 443
+    tls:
+      enabled: false
+
+# ------------------------------------------------------------------------------
+# Entrypoints (force 80/443 and force NO TLS in Traefik)
+# ------------------------------------------------------------------------------
+additionalArguments:
+  - "--entryPoints.web.address=:80"
+  - "--entryPoints.websecure.address=:443"
+  - "--entryPoints.websecure.http.tls=false"
+
+  # Global HTTP → HTTPS redirect (handled at entryPoint level)
+  - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+  - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+
+  # Don’t expose dashboard/insecure API
+  - "--api.dashboard=false"
+  - "--api.insecure=false"
+
+  # Log level (keep INFO for demo/prod)
+  - "--log.level=INFO"
+
+# ------------------------------------------------------------------------------
+# No persistence needed (no ACME / no cert storage)
+# ------------------------------------------------------------------------------
+persistence:
+  enabled: false
