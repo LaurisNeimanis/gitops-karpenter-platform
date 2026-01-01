@@ -190,12 +190,12 @@ gitops-karpenter-platform/
 ├── terraform/
 │   └── envs/
 │       └── dev/
-├── gitops/
-│   ├── bootstrap/
-│   ├── argo/
-│   └── apps/
-│       ├── platform/
-│       └── workloads/
+└── gitops/
+    ├── bootstrap/
+    ├── argo/
+    └── apps/
+        ├── platform/
+        └── workloads/
 ```
 
 Domain names, DNS automation, and TLS termination details are documented separately in
