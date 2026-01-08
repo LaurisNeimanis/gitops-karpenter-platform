@@ -3,5 +3,5 @@ kind: Kustomization
 
 resources:
   - nodeclasses/aws-default.yaml
-  - nodepools/on-demand.yaml
-  - nodepools/spot.yaml
+  - nodepools/on-demand-arm.yaml
+  - nodepools/spot-arm.yaml
