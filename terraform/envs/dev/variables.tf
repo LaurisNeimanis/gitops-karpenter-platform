@@ -43,7 +43,12 @@ variable "node_instance_types" {
   description = <<EOF
 Ordered list of EC2 instance types for EKS managed node groups.
 
-Instance type selection strategy:
+Important:
+- Instance types MUST match the node group AMI architecture
+- This environment uses Amazon Linux 2023 ARM64 (AWS Graviton)
+- Only ARM-compatible instance types (e.g. t4g, c7g, m7g) are valid
+
+Selection strategy:
 - First entry is the primary instance type
 - Subsequent entries act as capacity fallbacks
 - Ordering is intentional and environment-specific

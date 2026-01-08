@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - ../../base
 
-
 patches:
   - target:
       kind: Deployment
@@ -13,4 +12,4 @@ patches:
       - op: add
         path: /spec/template/spec/nodeSelector
         value:
-          karpenter.sh/nodepool: on-demand
+          karpenter.sh/nodepool: on-demand-arm

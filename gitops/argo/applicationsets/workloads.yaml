@@ -10,10 +10,12 @@ spec:
           - name: whoami
             env: dev
             namespace: whoami
+            profile: managed-on-demand
 
           - name: ccore-ai
             env: dev
             namespace: ccore-ai
+            profile: karpenter-on-demand
 
   template:
     metadata:
@@ -27,7 +29,7 @@ spec:
       source:
         repoURL: https://github.com/LaurisNeimanis/gitops-karpenter-platform.git
         targetRevision: main
-        path: gitops/apps/workloads/{{name}}/overlays/{{env}}
+        path: gitops/apps/workloads/{{name}}/overlays/{{env}}-{{profile}}
 
       destination:
         server: https://kubernetes.default.svc

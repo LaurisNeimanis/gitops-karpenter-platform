@@ -175,7 +175,7 @@ resource "aws_iam_instance_profile" "karpenter" {
 
 data "aws_iam_policy_document" "karpenter_controller_assume_role" {
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "sts:AssumeRole",
       "sts:TagSession"

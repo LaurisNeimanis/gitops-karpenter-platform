@@ -17,7 +17,7 @@ flowchart TB
     %% =========================
     subgraph TF["Terraform"]
         TF_EKS["EKS Cluster"]
-        TF_MNG["Managed Node Group<br/>(bootstrap / system)"]
+        TF_MNG["Managed Node Group<br/>(bootstrap / system, ARM64)"]
         TF_KARP_AWS["Karpenter AWS Prerequisites<br/>(IAM, SQS, Events)"]
     end
 
@@ -51,7 +51,7 @@ flowchart TB
     %% WORKLOADS
     %% =========================
     subgraph WORKLOADS["Application Workloads"]
-        APP["Deployments<br/>(CPU / memory only)"]
+        APP["Deployments<br/>(CPU / memory only,<br/>profile-selected)"]
     end
 
     %% =========================
@@ -64,6 +64,7 @@ flowchart TB
     TF --> TF_EKS
     TF_EKS --> TF_MNG
     TF_MNG --> EC2
+    KARP --> EC2
 
     TF_KARP_AWS --> SQS
     TF_KARP_AWS --> EB

@@ -31,6 +31,7 @@ resource "helm_release" "karpenter" {
           }
         }
 
+        # Ensures Karpenter controller runs ONLY on system/bootstrap nodes
         nodeSelector = {
           "karpenter.sh/controller" = "true"
         }

@@ -52,6 +52,7 @@ Infrastructure is treated as an **explicit external dependency**, provisioned an
 - Control pricing models and risk exposure
 - Absorb node-level disruption and consolidation
 - Guarantee cluster-level stability
+- Own node architecture decisions (e.g. ARM64 vs x86_64)
 
 ### Workload Responsibilities
 - Declare CPU and memory requirements
@@ -72,10 +73,10 @@ Infrastructure is treated as an **explicit external dependency**, provisioned an
 (Argo CD)
             ↓
 [ Karpenter Platform ]
-(NodePools, disruption, consolidation)
+(NodePools, scheduling profiles, disruption, consolidation)
             ↓
 [ Application Workloads ]
-(CPU / memory requests only)
+(CPU / memory requests only, profile-selected)
 ```
 
 A more detailed, lower-level architecture diagram is available in  
@@ -91,7 +92,8 @@ This repository assumes a **pre-existing EKS cluster** with a minimal
 ### Baseline (dev / evaluation)
 
 - **Managed node group (bootstrap / system)**
-  - Instance types: `t3.small` (primary), `t3a.small` (capacity fallback)
+  - AMI architecture: Amazon Linux 2023 **ARM64 (Graviton)**
+  - Instance types: `t4g.small` (or other ARM-compatible types)
   - Node count: **2**
 - **Purpose**
   - Run platform control-plane workloads:
@@ -99,9 +101,14 @@ This repository assumes a **pre-existing EKS cluster** with a minimal
     - Karpenter controller
     - Ingress (Traefik)
     - ExternalDNS
-  - Provide initial scheduling capacity for workloads
+  - Provide initial scheduling capacity for platform components and
+  `managed-on-demand` workloads
 
 Single-node clusters are **not supported**.
+
+> **Important:**  
+> Bootstrap managed node groups use **ARM64 (AWS Graviton)**.  
+> All instance types **must** be ARM-compatible (`t4g`, `c7g`, `m7g`, etc.).
 
 ---
 
@@ -130,12 +137,38 @@ No manual node group resizing is required once Karpenter is active.
 
 ## Capacity Model
 
-The platform exposes a **limited, opinionated set of capacity classes**, for example:
+The platform exposes a **limited, opinionated set of capacity classes**  
+via scheduling profiles, for example:
 
 - `on-demand` — stable, predictable workloads
 - `spot` — cost-optimized, disruption-tolerant workloads
 
 Applications do **not** select instance types, pricing models, or zones.
+
+---
+
+## Workload Scheduling Profiles
+
+Workloads are deployed using **explicit scheduling profiles** selected at the
+GitOps layer.
+
+Available profiles include:
+
+- `managed-on-demand` — workloads run on the bootstrap managed node group
+- `karpenter-on-demand` — workloads run on Karpenter-provisioned on-demand capacity
+- `karpenter-spot` — workloads run on Karpenter-provisioned spot capacity
+
+Profiles determine:
+- whether workloads run on managed node groups or Karpenter-managed nodes
+- cost characteristics and disruption tolerance
+
+Profile selection is performed via GitOps overlays and Argo CD ApplicationSets.
+
+Workloads **do not** define `nodeSelector`, instance types, or pricing models
+directly.
+
+Scheduling profiles are enforced and validated at the platform level.
+Invalid or unsupported profiles will not be reconciled.
 
 ---
 

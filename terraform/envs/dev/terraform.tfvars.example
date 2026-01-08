@@ -38,8 +38,7 @@ private_subnets = [
 cluster_version = "1.34"
 
 node_instance_types = [
-  "t3.small", # primary
-  "t3a.small" # fallback
+  "t4g.small"
 ]
 
 node_desired_size = 2

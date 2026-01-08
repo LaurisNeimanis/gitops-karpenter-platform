@@ -123,7 +123,7 @@ Adjust values as required:
 - AWS region
 - VPC and subnet CIDRs
 - Kubernetes version
-- Bootstrap node instance types
+- Bootstrap node instance types (must match ARM64 architecture)
 - API endpoint allowlist
 
 ---
@@ -139,7 +139,9 @@ This provisions:
 
 - VPC (private subnets, S3 VPC endpoint)
 - EKS cluster (API authentication mode)
-- Bootstrap managed node group (e.g. 2× `t3.small` / `t3a.small`)
+- Bootstrap managed node group:
+  - Amazon Linux 2023 **ARM64**
+  - Example: 2× `t4g.small`
 - Karpenter AWS prerequisites:
   - IAM roles
   - Instance profile
@@ -279,6 +281,17 @@ See [`docs/domain-configuration.md`](docs/domain-configuration.md).
 - Example workloads (e.g. `whoami`, `ccore-ai`)
 - IngressRoutes
 - Namespace-scoped resources only
+
+### Workload Scheduling Profiles
+
+Workloads are deployed using **platform-defined scheduling profiles**
+(e.g. `managed-on-demand`, `karpenter-on-demand`, `karpenter-spot`).
+
+Profiles are selected at the GitOps layer and determine:
+- where workloads are scheduled
+- cost and disruption characteristics
+
+Workloads do not define node selectors or instance types directly.
 
 ---
 

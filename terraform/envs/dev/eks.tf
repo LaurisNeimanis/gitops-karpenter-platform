@@ -57,7 +57,7 @@ module "eks" {
   # -----------------------------------------------------
   eks_managed_node_groups = {
     system = {
-      ami_type       = "AL2023_x86_64_STANDARD"
+      ami_type       = "AL2023_ARM_64_STANDARD"
       instance_types = var.node_instance_types
 
       min_size     = var.node_min_size
