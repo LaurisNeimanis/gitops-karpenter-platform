@@ -164,11 +164,20 @@ Profiles determine:
 
 Profile selection is performed via GitOps overlays and Argo CD ApplicationSets.
 
-Workloads **do not** define `nodeSelector`, instance types, or pricing models
-directly.
+Workloads do not define node selectors, instance types, or pricing models
+in their base manifests.
+Scheduling intent is applied exclusively via GitOps overlays.
 
 Scheduling profiles are enforced and validated at the platform level.
 Invalid or unsupported profiles will not be reconciled.
+
+### Profile Enforcement
+
+| Profile               | Enforcement mechanism |
+|-----------------------|-----------------------|
+| managed-on-demand     | Node affinity to EKS managed node group |
+| karpenter-on-demand   | nodeSelector → Karpenter NodePool |
+| karpenter-spot        | nodeSelector → Karpenter NodePool |
 
 ---
 
@@ -242,6 +251,7 @@ Domain names, DNS automation, and TLS termination details are documented separat
 - Defaults are opinionated and boring
 - Safety and predictability over raw efficiency
 - No hidden coupling between workloads and infrastructure
+- All platform components use explicit version pinning for reproducibility
 
 ---
 
@@ -251,6 +261,7 @@ Domain names, DNS automation, and TLS termination details are documented separat
 - Autoscaling optimization at the workload layer
 - Feature completeness
 - Cloud abstraction for its own sake
+- Horizontal Pod Autoscaling (HPA)
 
 ---
 

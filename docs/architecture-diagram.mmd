@@ -18,7 +18,7 @@ flowchart TB
     subgraph TF["Terraform"]
         TF_EKS["EKS Cluster"]
         TF_MNG["Managed Node Group<br/>(bootstrap / system, ARM64)"]
-        TF_KARP_AWS["Karpenter AWS Prerequisites<br/>(IAM, SQS, Events)"]
+        TF_KARP_AWS["Karpenter AWS Prerequisites<br/>(IAM, Pod Identity, SQS, Events)"]
     end
 
     %% =========================
