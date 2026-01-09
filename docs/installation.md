@@ -28,6 +28,9 @@ The installation consists of **two explicit phases**:
 - Karpenter AWS-side prerequisites
 - Karpenter controller installation (Helm)
 
+Terraform installs only the Karpenter controller and AWS-side prerequisites.
+All scheduling logic (NodePools, EC2NodeClasses) is managed exclusively via GitOps.
+
 ### GitOps responsibilities
 
 - Karpenter `NodePools` and `EC2NodeClasses`
@@ -111,14 +114,14 @@ The backend **must already exist**.
 
 ### 2.2 Environment configuration
 
-Create the real tfvars file:
+Copy the example variables file and create the real environment configuration:
 
 ```bash
 cd terraform/envs/dev
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Adjust values as required:
+Then review and adjust values as required for your environment:
 
 - AWS region
 - VPC and subnet CIDRs
@@ -161,7 +164,7 @@ After a successful Terraform apply:
 ```bash
 aws eks update-kubeconfig \
   --region eu-central-1 \
-  --name eks-platform-dev-cluster
+  --name eks-platform-<env>-cluster
 ```
 
 Verify access:
@@ -186,6 +189,9 @@ Argo CD is treated as **control-plane tooling** and is intentionally
 **not managed by this GitOps repository**.
 
 ### 4.1 Install Argo CD
+
+> **Note:**  
+> Commands below assume execution from the repository root.
 
 ```bash
 kubectl apply -k gitops/bootstrap/argocd
@@ -291,7 +297,8 @@ Profiles are selected at the GitOps layer and determine:
 - where workloads are scheduled
 - cost and disruption characteristics
 
-Workloads do not define node selectors or instance types directly.
+Workloads do not define node selectors or instance types in their base manifests.
+Scheduling intent is applied exclusively via GitOps overlays.
 
 ---
 
