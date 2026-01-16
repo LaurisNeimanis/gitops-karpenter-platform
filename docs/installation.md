@@ -56,7 +56,7 @@ These layers are **intentionally decoupled**.
 
 - AWS account with permissions for:
   - EKS, EC2, VPC, IAM, KMS, CloudWatch
-  - S3 and DynamoDB (Terraform backend)
+  - S3 (Terraform remote state with native locking)
 
 ---
 
@@ -72,8 +72,8 @@ https://github.com/LaurisNeimanis/aws-tf-backend-bootstrap
 
 This creates:
 
-- S3 bucket for Terraform state
-- DynamoDB table for state locking
+- S3 bucket for Terraform remote state
+- Native S3 state locking (`.tflock` objects)
 
 This repository **only consumes** that backend.
 
@@ -105,8 +105,8 @@ terraform/envs/dev/backend.tf
 Set:
 
 - S3 bucket name
-- DynamoDB table name
 - AWS region
+- Unique Terraform state key per environment
 
 The backend **must already exist**.
 
