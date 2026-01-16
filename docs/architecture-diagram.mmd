@@ -1,5 +1,10 @@
 flowchart TB
     %% =========================
+    %% EXTERNAL
+    %% =========================
+    DNS["DNS Provider<br/>(Cloudflare)"]
+
+    %% =========================
     %% AWS INFRASTRUCTURE LAYER
     %% =========================
     subgraph AWS["AWS Account"]
@@ -9,7 +14,7 @@ flowchart TB
         NLB["AWS NLB<br/>(TLS via ACM)"]
         SQS["SQS Interruption Queue"]
         EB["EventBridge"]
-        DNS["DNS Provider<br/>(Cloudflare)"]
+        ACM["AWS ACM"]
     end
 
     %% =========================
@@ -58,7 +63,7 @@ flowchart TB
     %% RELATIONSHIPS
     %% =========================
 
-    %% Terraform → AWS
+    %% Terraform provisioning
     TF --> VPC
     TF --> SUBNETS
     TF --> TF_EKS
@@ -71,12 +76,11 @@ flowchart TB
 
     %% EKS control plane
     TF_EKS --> API
-    API --> ARGO
 
     %% GitOps reconciliation
     ARGO --> API
 
-    %% Platform resources via API
+    %% Platform objects via API
     API --> KARP
     API --> EC2CLASS
     API --> NP_OND
@@ -92,7 +96,8 @@ flowchart TB
     KARP --> EC2
     SQS --> KARP
 
-    %% Traffic flow
+    %% Traffic & TLS
     DNS --> NLB
+    ACM --> NLB
     NLB --> TRAEFIK
     TRAEFIK --> APP
