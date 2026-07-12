@@ -40,8 +40,9 @@ This repository is designed as a **platform-level component, environment-aware b
 - Terraform backend creation
 - Business logic inside applications
 - CI/CD pipelines
+- DNS zones, ACM certificate issuance, and provider credentials
 
-Infrastructure is treated as an **explicit external dependency**, provisioned and managed separately.
+This repository includes the **reference Terraform layer** for VPC, EKS, bootstrap capacity, and Karpenter AWS-side prerequisites. Shared account-level foundations such as Terraform backend bootstrap, DNS ownership, and certificate lifecycle are treated as external dependencies.
 
 ---
 
@@ -251,7 +252,8 @@ Domain names, DNS automation, and TLS termination details are documented separat
 - Defaults are opinionated and boring
 - Safety and predictability over raw efficiency
 - No hidden coupling between workloads and infrastructure
-- All platform components use explicit version pinning for reproducibility
+- Platform services and controllers use explicit version pinning where this repository owns the version
+- Workload image tags are demonstration inputs and should be pinned by digest or immutable release tag for production promotion
 
 ---
 
